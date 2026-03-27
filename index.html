@@ -25,7 +25,7 @@
             <div class="sidebar-section-title">Overview</div>
             <a href="#intro">Introduction</a>
             <a href="#guided-lesson">Guided lesson</a>
-            <a href="#math-connection">Math connection</a>
+            <a href="#math-connection">Growth, Decay, and Rate of Change</a>
             <div class="sidebar-section-title">Modules</div>
             <a href="#distributions">1. Distribution families</a>
             <a href="#sample-space">2. Sample space</a>
@@ -109,7 +109,7 @@
 
                 <section class="panel concept-bridge" id="math-connection">
                     <div class="concept-header">
-                        <p class="module-kicker">Math connection</p>
+                        <p class="module-kicker">Growth, Decay, and Rate of Change</p>
                         <h2>Exponents, logarithms, and derivatives work as one system</h2>
                         <p>
                             Exponents, logarithms, and derivatives are all ways to describe how one quantity depends on
@@ -705,32 +705,31 @@
 
                             <article class="dist-type-card foundation-entropy">
                                 <p class="module-kicker">Information theory</p>
-                                <h3>Entropy compares fair vs loaded die</h3>
+                                <h3>Shannon entropy of a die distribution</h3>
                                 <p>
-                                    Entropy measures the average uncertainty in outcomes. Two graphs below show:
-                                    a <strong>fair die</strong> (left) where all faces {1, 2, 3, 4, 5, 6} are equally
-                                    likely,
-                                    and a <strong>loaded die</strong> (right) where face 6 is biased. As one outcome
-                                    becomes
-                                    more probable, the distribution becomes more predictable and entropy drops.
+                                    Shannon entropy measures how uncertain a random outcome is before it happens.
+                                    For a die, the possible outcomes are fixed (1 to 6), but their probabilities can
+                                    change. A flatter distribution means more uncertainty, while a concentrated
+                                    distribution means less uncertainty.
                                 </p>
                                 <div class="dist-rule-block">
-                                    <span class="dist-rule-label">Entropy formula (discrete outcomes)</span>
+                                    <span class="dist-rule-label">Definition for discrete outcomes</span>
                                     <code>H(X) = -Σ p(x) log₂ p(x)</code>
-                                    Measured in bits. Fair die: <code>H(X) = log₂(6) ≈ 2.585 bits</code>
+                                    Entropy is measured in bits. For a fair die,
+                                    <code>H(X) = log₂(6) ≈ 2.585</code>, which is the maximum for six outcomes.
                                 </div>
                                 <svg id="entropy-dice-explorer-svg" class="foundation-mini-svg"
                                     aria-label="Fair die vs loaded die entropy comparison with die icons"></svg>
                                 <div class="mini-control-row">
-                                    <label for="entropy-die-p6-slider">Adjust loaded die: P(6) = <strong
+                                    <label for="entropy-die-p6-slider">Loaded die control: P(6) = <strong
                                             id="entropy-die-p6-value">0.50</strong></label>
                                     <input id="entropy-die-p6-slider" type="range" min="0.17" max="0.90" step="0.01"
                                         value="0.50" />
                                 </div>
                                 <p class="dist-example-note">
-                                    Left panel (blue): fair die with equal probabilities and maximum entropy.
-                                    Right panel (red): loaded die with P(6) biased by slider. Notice entropy decreases
-                                    as one outcome dominates.
+                                    Left panel: fair die with equal probabilities and higher entropy (more outcome
+                                    uncertainty). Right panel: loaded die with biased probabilities and lower entropy
+                                    (less outcome uncertainty).
                                 </p>
                             </article>
 
