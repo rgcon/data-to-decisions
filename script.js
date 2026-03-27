@@ -194,8 +194,8 @@ const learningComparison = document.querySelector("#learning-comparison");
 const parameterGroups = Array.from(document.querySelectorAll(".parameter-group"));
 const lossErrorSlider = document.querySelector("#loss-error-slider");
 const lossErrorValue = document.querySelector("#loss-error-value");
-const entropyPSlider = document.querySelector("#entropy-p-slider");
-const entropyPValue = document.querySelector("#entropy-p-value");
+const entropyDieP6Slider = document.querySelector("#entropy-die-p6-slider");
+const entropyDieP6Value = document.querySelector("#entropy-die-p6-value");
 const gradientXSlider = document.querySelector("#gradient-x-slider");
 const gradientXValue = document.querySelector("#gradient-x-value");
 const descentLRSlider = document.querySelector("#descent-lr-slider");
@@ -1676,59 +1676,99 @@ function drawLossExample() {
     g.append("g").attr("class", "axis").call(d3.axisLeft(y).ticks(4));
 }
 
-function drawEntropyExample() {
-    const svg = d3.select("#entropy-example-svg");
+function shannonEntropy(probabilities) {
+    return -probabilities.reduce((sum, p) => {
+        if (p <= 0) {
+            return sum;
+        }
+        return sum + (p * Math.log2(p));
+    }, 0);
+}
+
+function getLoadedDieProbabilities(pSix) {
+    const rest = (1 - pSix) / 5;
+    return [rest, rest, rest, rest, rest, pSix];
+}
+
+function drawEntropyDiceExplorer() {
+    const svg = d3.select("#entropy-dice-explorer-svg");
     if (svg.empty()) return;
 
-    const W = 320, H = 170;
-    const m = { top: 18, right: 12, bottom: 34, left: 36 };
-    const iW = W - m.left - m.right;
-    const iH = H - m.top - m.bottom;
-
-    const selectedP = Number(entropyPSlider ? entropyPSlider.value : 0.5);
-    if (entropyPValue) {
-        entropyPValue.textContent = selectedP.toFixed(2);
+    const pSix = Number(entropyDieP6Slider ? entropyDieP6Slider.value : 0.5);
+    if (entropyDieP6Value) {
+        entropyDieP6Value.textContent = pSix.toFixed(2);
     }
 
-    const safeLog2 = (v) => (v <= 0 ? 0 : Math.log2(v));
-    const entropy = (p) => -(p * safeLog2(p) + (1 - p) * safeLog2(1 - p));
-    const data = d3.range(0.001, 1, 0.005).map((p) => ({ p, h: entropy(p) }));
+    const probs = getLoadedDieProbabilities(pSix);
+    const entropy = shannonEntropy(probs);
+    const fairEntropy = Math.log2(6);
 
-    const x = d3.scaleLinear().domain([0, 1]).range([0, iW]);
-    const y = d3.scaleLinear().domain([0, 1.05]).range([iH, 0]);
-    const line = d3.line().x((d) => x(d.p)).y((d) => y(d.h)).curve(d3.curveMonotoneX);
+    const W = 560, H = 210;
+    const m = { top: 34, right: 18, bottom: 38, left: 42 };
+    const iW = W - m.left - m.right;
+    const iH = H - m.top - m.bottom;
 
     svg.attr("viewBox", `0 0 ${W} ${H}`);
     svg.selectAll("*").remove();
     const g = svg.append("g").attr("transform", `translate(${m.left},${m.top})`);
 
-    g.append("path").datum(data).attr("fill", "none").attr("stroke", "#34a853").attr("stroke-width", 2.5).attr("d", line);
-    g.append("circle").attr("cx", x(0.5)).attr("cy", y(1)).attr("r", 5).attr("fill", "#fbbc04");
-    g.append("text").attr("x", x(0.5) + 8).attr("y", y(1) - 6).attr("font-size", 9).attr("fill", "#b06700").text("max at p=0.5");
+    const x = d3.scaleBand().domain(["1", "2", "3", "4", "5", "6"]).range([0, iW]).padding(0.2);
+    const y = d3.scaleLinear().domain([0, 0.95]).range([iH, 0]);
 
-    g.append("line")
-        .attr("x1", x(selectedP)).attr("x2", x(selectedP))
-        .attr("y1", iH).attr("y2", y(entropy(selectedP)))
-        .attr("stroke", "#ea4335").attr("stroke-dasharray", "4,3");
-    g.append("circle")
-        .attr("cx", x(selectedP)).attr("cy", y(entropy(selectedP)))
-        .attr("r", 4.5).attr("fill", "#ea4335");
+    g.selectAll("rect.prob")
+        .data(probs)
+        .join("rect")
+        .attr("class", "prob")
+        .attr("x", (_, i) => x(String(i + 1)))
+        .attr("y", (d) => y(d))
+        .attr("width", x.bandwidth())
+        .attr("height", (d) => iH - y(d))
+        .attr("fill", (_, i) => (i === 5 ? "#ea4335" : "#1a73e8"))
+        .attr("rx", 3);
 
-    g.append("g").attr("class", "axis").attr("transform", `translate(0,${iH})`).call(d3.axisBottom(x).ticks(5));
-    g.append("g").attr("class", "axis").call(d3.axisLeft(y).ticks(4));
+    g.append("g").attr("class", "axis").attr("transform", `translate(0,${iH})`).call(d3.axisBottom(x));
+    g.append("g").attr("class", "axis").call(d3.axisLeft(y).ticks(4).tickFormat(d3.format(".2f")));
+
+    g.append("text")
+        .attr("x", 0).attr("y", -12)
+        .attr("font-size", 11).attr("fill", "#202124")
+        .text(`Loaded die distribution  •  H(X) = ${entropy.toFixed(3)} bits`);
+
+    g.append("text")
+        .attr("x", iW - 2).attr("y", -12)
+        .attr("text-anchor", "end")
+        .attr("font-size", 10).attr("fill", "#5f6368")
+        .text(`Fair die entropy = ${fairEntropy.toFixed(3)} bits`);
+
+    g.append("text")
+        .attr("x", x("6") + x.bandwidth() / 2)
+        .attr("y", y(probs[5]) - 6)
+        .attr("text-anchor", "middle")
+        .attr("font-size", 10)
+        .attr("fill", "#c5221f")
+        .text(`P(6)=${probs[5].toFixed(2)}`);
 }
 
-function drawEntropyPattern() {
-    const svg = d3.select("#entropy-pattern-svg");
+function drawEntropyWorkflow() {
+    const svg = d3.select("#entropy-workflow-svg");
     if (svg.empty()) return;
 
-    const selectedP = Number(entropyPSlider ? entropyPSlider.value : 0.5);
-    const safeLog2 = (v) => (v <= 0 ? 0 : Math.log2(v));
-    const entropy = (p) => -(p * safeLog2(p) + (1 - p) * safeLog2(1 - p));
+    const pSix = Number(entropyDieP6Slider ? entropyDieP6Slider.value : 0.5);
+    const probs = getLoadedDieProbabilities(pSix);
+    const hRoot = shannonEntropy(probs);
 
-    const W = 560;
-    const H = 190;
-    const m = { top: 28, right: 12, bottom: 26, left: 14 };
+    const pEven = probs[1] + probs[3] + probs[5];
+    const pOdd = probs[0] + probs[2] + probs[4];
+
+    const evenCond = pEven > 0 ? [probs[1] / pEven, probs[3] / pEven, probs[5] / pEven] : [0, 0, 0];
+    const oddCond = pOdd > 0 ? [probs[0] / pOdd, probs[2] / pOdd, probs[4] / pOdd] : [0, 0, 0];
+    const hEven = shannonEntropy(evenCond);
+    const hOdd = shannonEntropy(oddCond);
+    const hAfterSplit = (pEven * hEven) + (pOdd * hOdd);
+    const infoGain = hRoot - hAfterSplit;
+
+    const W = 560, H = 210;
+    const m = { top: 30, right: 12, bottom: 28, left: 12 };
     const iW = W - m.left - m.right;
     const iH = H - m.top - m.bottom;
 
@@ -1739,120 +1779,68 @@ function drawEntropyPattern() {
     const panelGap = 18;
     const panelW = (iW - panelGap) / 2;
 
-    // ---- Left panel: black-box output distribution ----
+    // Black-box panel
     const left = g.append("g");
-    left.append("rect")
-        .attr("x", 0).attr("y", 0)
-        .attr("width", panelW).attr("height", iH)
+    left.append("rect").attr("x", 0).attr("y", 0).attr("width", panelW).attr("height", iH)
         .attr("fill", "#f8f9fa").attr("stroke", "#dadce0").attr("rx", 6);
+    left.append("text").attr("x", 8).attr("y", 14).attr("font-size", 10).attr("font-weight", 600).attr("fill", "#1a73e8")
+        .text("BLACK-BOX");
+    left.append("text").attr("x", 8).attr("y", 28).attr("font-size", 10).attr("fill", "#5f6368")
+        .text("Only use final probabilities");
 
-    left.append("text")
-        .attr("x", 8).attr("y", 14)
-        .attr("font-size", 10).attr("font-weight", 600)
-        .attr("fill", "#1a73e8")
-        .text("BLACK-BOX PATTERN");
+    const lx = d3.scaleBand().domain(["1", "2", "3", "4", "5", "6"]).range([8, panelW - 8]).padding(0.2);
+    const ly = d3.scaleLinear().domain([0, 0.95]).range([iH - 24, 40]);
+    left.selectAll("rect").data(probs).join("rect")
+        .attr("x", (_, i) => lx(String(i + 1)))
+        .attr("y", (d) => ly(d))
+        .attr("width", lx.bandwidth())
+        .attr("height", (d) => (iH - 24) - ly(d))
+        .attr("fill", "#1a73e8").attr("opacity", 0.75).attr("rx", 2);
 
-    left.append("text")
-        .attr("x", 8).attr("y", 28)
-        .attr("font-size", 10).attr("fill", "#5f6368")
-        .text("Use only predicted probabilities");
+    left.append("text").attr("x", 8).attr("y", iH - 8).attr("font-size", 10).attr("fill", "#202124")
+        .text(`H(output) = ${hRoot.toFixed(3)} bits`);
 
-    const lbY = d3.scaleLinear().domain([0, 1]).range([iH - 18, 38]);
-    const barW = 38;
-    const b1x = panelW * 0.28;
-    const b2x = panelW * 0.58;
-
-    left.append("rect")
-        .attr("x", b1x).attr("y", lbY(selectedP))
-        .attr("width", barW).attr("height", lbY(0) - lbY(selectedP))
-        .attr("fill", "#1a73e8").attr("rx", 3);
-    left.append("rect")
-        .attr("x", b2x).attr("y", lbY(1 - selectedP))
-        .attr("width", barW).attr("height", lbY(0) - lbY(1 - selectedP))
-        .attr("fill", "#34a853").attr("rx", 3);
-
-    left.append("text").attr("x", b1x + barW / 2).attr("y", iH - 6).attr("text-anchor", "middle")
-        .attr("font-size", 9).attr("fill", "#5f6368").text("A");
-    left.append("text").attr("x", b2x + barW / 2).attr("y", iH - 6).attr("text-anchor", "middle")
-        .attr("font-size", 9).attr("fill", "#5f6368").text("B");
-
-    left.append("text")
-        .attr("x", 8).attr("y", iH - 24)
-        .attr("font-size", 10).attr("fill", "#202124")
-        .text(`H(output) = ${entropy(selectedP).toFixed(3)} bits`);
-
-    // ---- Right panel: white-box internal split ----
+    // White-box panel
     const right = g.append("g").attr("transform", `translate(${panelW + panelGap},0)`);
-    right.append("rect")
-        .attr("x", 0).attr("y", 0)
-        .attr("width", panelW).attr("height", iH)
+    right.append("rect").attr("x", 0).attr("y", 0).attr("width", panelW).attr("height", iH)
         .attr("fill", "#f8f9fa").attr("stroke", "#dadce0").attr("rx", 6);
-
-    right.append("text")
-        .attr("x", 8).attr("y", 14)
-        .attr("font-size", 10).attr("font-weight", 600)
-        .attr("fill", "#ea4335")
-        .text("WHITE-BOX PATTERN");
-
-    right.append("text")
-        .attr("x", 8).attr("y", 28)
-        .attr("font-size", 10).attr("fill", "#5f6368")
-        .text("Inspect parent and child node entropies");
-
-    const delta = 0.25;
-    const pLeft = Math.max(0.01, Math.min(0.99, selectedP + delta));
-    const pRight = Math.max(0.01, Math.min(0.99, selectedP - delta));
-    const hParent = entropy(selectedP);
-    const hChildren = 0.5 * (entropy(pLeft) + entropy(pRight));
-    const infoGain = hParent - hChildren;
-
-    const wbY = d3.scaleLinear().domain([0, 1]).range([iH - 18, 40]);
-    const xParent = panelW * 0.17;
-    const xChild1 = panelW * 0.45;
-    const xChild2 = panelW * 0.72;
-    const wbW = 30;
+    right.append("text").attr("x", 8).attr("y", 14).attr("font-size", 10).attr("font-weight", 600).attr("fill", "#ea4335")
+        .text("WHITE-BOX");
+    right.append("text").attr("x", 8).attr("y", 28).attr("font-size", 10).attr("fill", "#5f6368")
+        .text("Inspect entropy before/after split");
 
     const bars = [
-        { x: xParent, h: hParent, name: "Parent" },
-        { x: xChild1, h: entropy(pLeft), name: "L" },
-        { x: xChild2, h: entropy(pRight), name: "R" },
+        { key: "Root", v: hRoot, color: "#ea4335" },
+        { key: "After split", v: hAfterSplit, color: "#fbbc04" },
+        { key: "Gain", v: Math.max(infoGain, 0), color: "#34a853" },
     ];
 
-    right.selectAll("rect.entbar")
+    const rx = d3.scaleBand().domain(bars.map((d) => d.key)).range([10, panelW - 10]).padding(0.35);
+    const ry = d3.scaleLinear().domain([0, Math.max(hRoot, 2.6)]).range([iH - 26, 40]);
+
+    right.selectAll("rect.ent")
         .data(bars)
         .join("rect")
-        .attr("class", "entbar")
-        .attr("x", (d) => d.x)
-        .attr("y", (d) => wbY(d.h))
-        .attr("width", wbW)
-        .attr("height", (d) => wbY(0) - wbY(d.h))
-        .attr("fill", (d, i) => (i === 0 ? "#ea4335" : "#fbbc04"))
+        .attr("class", "ent")
+        .attr("x", (d) => rx(d.key))
+        .attr("y", (d) => ry(d.v))
+        .attr("width", rx.bandwidth())
+        .attr("height", (d) => (iH - 26) - ry(d.v))
+        .attr("fill", (d) => d.color)
         .attr("rx", 3);
 
-    right.selectAll("text.entname")
+    right.selectAll("text.entlbl")
         .data(bars)
         .join("text")
-        .attr("class", "entname")
-        .attr("x", (d) => d.x + wbW / 2)
-        .attr("y", iH - 6)
+        .attr("x", (d) => rx(d.key) + rx.bandwidth() / 2)
+        .attr("y", iH - 8)
         .attr("text-anchor", "middle")
         .attr("font-size", 9)
         .attr("fill", "#5f6368")
-        .text((d) => d.name);
+        .text((d) => d.key);
 
-    right.append("line")
-        .attr("x1", xParent + wbW).attr("x2", xChild1)
-        .attr("y1", wbY(hParent) - 6).attr("y2", wbY(entropy(pLeft)) - 6)
-        .attr("stroke", "#9aa0a6").attr("stroke-width", 1.3);
-    right.append("line")
-        .attr("x1", xParent + wbW).attr("x2", xChild2)
-        .attr("y1", wbY(hParent) - 6).attr("y2", wbY(entropy(pRight)) - 6)
-        .attr("stroke", "#9aa0a6").attr("stroke-width", 1.3);
-
-    right.append("text")
-        .attr("x", 8).attr("y", iH - 24)
-        .attr("font-size", 10).attr("fill", "#202124")
-        .text(`Information gain = ${infoGain.toFixed(3)} bits`);
+    right.append("text").attr("x", 8).attr("y", iH - 8).attr("font-size", 10).attr("fill", "#202124")
+        .text(`IG(even/odd split) = ${infoGain.toFixed(3)} bits`);
 }
 
 function drawGradientExample() {
@@ -1956,18 +1944,18 @@ function drawDescentExample() {
 }
 
 drawLossExample();
-drawEntropyExample();
-drawEntropyPattern();
+drawEntropyDiceExplorer();
+drawEntropyWorkflow();
 drawGradientExample();
 drawDescentExample();
 
 if (lossErrorSlider) {
     lossErrorSlider.addEventListener("input", drawLossExample);
 }
-if (entropyPSlider) {
-    entropyPSlider.addEventListener("input", () => {
-        drawEntropyExample();
-        drawEntropyPattern();
+if (entropyDieP6Slider) {
+    entropyDieP6Slider.addEventListener("input", () => {
+        drawEntropyDiceExplorer();
+        drawEntropyWorkflow();
     });
 }
 if (gradientXSlider) {

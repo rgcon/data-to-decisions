@@ -707,46 +707,45 @@
                                 <p class="module-kicker">Information theory</p>
                                 <h3>Shannon entropy measures uncertainty</h3>
                                 <p>
-                                    Entropy is the expected information content of an outcome. If outcomes are very
-                                    predictable, new observations carry little information and entropy is low.
-                                    If outcomes are balanced and uncertain, each observation is informative and
-                                    entropy is high. This is why entropy appears in decision trees, coding,
-                                    and probabilistic model evaluation.
+                                    Entropy quantifies noise in outcomes for a known outcome space.
+                                    For a die, outcomes are fixed as {1, 2, 3, 4, 5, 6}. What changes is the
+                                    probability distribution over that space. If all outcomes are equally likely,
+                                    entropy is high; if one outcome dominates, entropy drops because outcomes become
+                                    easier to predict.
                                 </p>
                                 <div class="dist-rule-block">
-                                    <span class="dist-rule-label">Binary entropy</span>
-                                    <code>H(p) = -p log₂ p - (1-p) log₂(1-p)</code>
-                                    The unit is bits. In binary cases, entropy is 1 bit at p=0.5 and approaches
-                                    0 bits as p goes to 0 or 1.
+                                    <span class="dist-rule-label">Entropy on a discrete outcome space</span>
+                                    <code>H(X) = -Σ p(x) log₂ p(x)</code>
+                                    Measured in bits. For a fair die, <code>H(X)=log₂(6)≈2.585</code> bits.
                                 </div>
-                                <svg id="entropy-example-svg" class="foundation-mini-svg"
-                                    aria-label="Binary Shannon entropy curve"></svg>
+                                <svg id="entropy-dice-explorer-svg" class="foundation-mini-svg"
+                                    aria-label="D3 entropy explorer for a loaded die"></svg>
+                                <div class="mini-control-row">
+                                    <label for="entropy-die-p6-slider">Loaded die: P(6) = <strong
+                                            id="entropy-die-p6-value">0.50</strong></label>
+                                    <input id="entropy-die-p6-slider" type="range" min="0.17" max="0.90" step="0.01"
+                                        value="0.50" />
+                                </div>
                                 <p class="dist-example-note">
-                                    Maximum uncertainty occurs at a fair split. Highly imbalanced classes have lower
-                                    entropy, meaning the label is easier to guess even before seeing features.
+                                    As P(6) increases, probability mass concentrates on one face and entropy drops,
+                                    indicating less outcome noise.
                                 </p>
                             </article>
 
                             <article class="dist-type-card foundation-pattern">
                                 <p class="module-kicker">Entropy patterns</p>
-                                <h3>Black-box vs white-box view</h3>
+                                <h3>Black-box vs white-box with the same die</h3>
                                 <p>
-                                    The same entropy concept supports two practical workflows. In black-box mode,
-                                    you only inspect model output probabilities and measure predictive uncertainty.
-                                    In white-box mode, you inspect internal structure (for example tree splits) and
-                                    measure entropy reduction as information gain.
+                                    Entropy can be used in two ways. In black-box mode, you only observe output
+                                    probabilities and report uncertainty H(output). In white-box mode, you inspect
+                                    internal structure (for example a split such as even vs odd) and compute
+                                    information gain from entropy reduction.
                                 </p>
-                                <div class="mini-control-row">
-                                    <label for="entropy-p-slider">Probability p = <strong
-                                            id="entropy-p-value">0.50</strong></label>
-                                    <input id="entropy-p-slider" type="range" min="0.01" max="0.99" step="0.01"
-                                        value="0.5" />
-                                </div>
-                                <svg id="entropy-pattern-svg" class="foundation-mini-svg"
+                                <svg id="entropy-workflow-svg" class="foundation-mini-svg"
                                     aria-label="Black box and white box entropy explanation"></svg>
                                 <p class="dist-example-note">
-                                    Left panel: black-box uncertainty from predicted class probabilities.
-                                    Right panel: white-box entropy drop from parent to children (information gain).
+                                    Left panel uses only final probabilities. Right panel shows entropy before and after
+                                    a split and reports information gain.
                                 </p>
                             </article>
 
