@@ -260,11 +260,24 @@
                     <div class="module-copy">
                         <p class="module-kicker">1. Distribution families</p>
                         <h2>Discrete, continuous, and mixed variables</h2>
-                        <p>
-                            The variable type is the most fundamental modeling decision you make. It determines
-                            <em>how probability is assigned</em>, which mathematical tools apply, and what
-                            questions you can ask about the data.
-                        </p>
+
+                        <div class="var-context-block">
+                            <p class="var-context-title">What is a variable?</p>
+                            <p>
+                                In statistics and data science, a <strong>variable</strong> is any quantity
+                                that can take different values across observations. When you collect data —
+                                number of purchases per customer, body temperature, time spent on a page —
+                                each column in your dataset is a variable. Before you model anything you
+                                must decide what <em>kind</em> of values it takes, because that determines
+                                which probability distribution makes sense, which loss function to optimize,
+                                and how to interpret model outputs.
+                            </p>
+                            <div class="var-context-pills">
+                                <span class="var-pill var-pill-discrete">Discrete — countable values</span>
+                                <span class="var-pill var-pill-continuous">Continuous — any value in a range</span>
+                                <span class="var-pill var-pill-mixed">Mixed — spike at a point + continuous tail</span>
+                            </div>
+                        </div>
 
                         <div class="dist-type-grid">
                             <div class="dist-type-card dist-type-discrete">
@@ -279,6 +292,15 @@
                                     <span class="dist-rule-label">Probability rule</span>
                                     <code>P(X = k)</code> is defined for every value <code>k</code>.
                                     All masses sum to exactly 1.
+                                </div>
+                                <div class="dist-example-chart-wrap">
+                                    <span class="dist-rule-label">Example: support calls per hour (Poisson λ=3)</span>
+                                    <svg id="discrete-example-svg" class="dist-example-svg"
+                                        aria-label="Discrete Poisson distribution example chart"></svg>
+                                    <p class="dist-example-note">
+                                        Each integer count has its own bar of height P(X = k). Fractions like 2.5 calls
+                                        are impossible — the variable lives on whole numbers only.
+                                    </p>
                                 </div>
                                 <div class="dist-impact-block">
                                     <span class="dist-rule-label">Distribution shape impact</span>
@@ -310,6 +332,15 @@
                                     <code>P(a ≤ X ≤ b) = ∫ f(x) dx</code> over [a, b].
                                     <code>P(X = k) = 0</code> for any exact value.
                                 </div>
+                                <div class="dist-example-chart-wrap">
+                                    <span class="dist-rule-label">Example: adult height in cm (Normal μ=170, σ=8)</span>
+                                    <svg id="continuous-example-svg" class="dist-example-svg"
+                                        aria-label="Continuous normal distribution example chart"></svg>
+                                    <p class="dist-example-note">
+                                        The shaded area between 162 and 178 cm represents P(162 ≤ X ≤ 178) ≈ 68%. No
+                                        individual height value carries probability — only intervals do.
+                                    </p>
+                                </div>
                                 <div class="dist-impact-block">
                                     <span class="dist-rule-label">Distribution shape impact</span>
                                     <p>
@@ -339,6 +370,17 @@
                                     <span class="dist-rule-label">Probability rule</span>
                                     <code>P(X = 0) = π</code> (mass spike) and
                                     <code>P(a ≤ X ≤ b) = (1−π) · ∫ f(x) dx</code> for the continuous part.
+                                </div>
+                                <div class="dist-example-chart-wrap">
+                                    <span class="dist-rule-label">Example: daily ad spend — many days £0, rest follow a
+                                        skewed curve</span>
+                                    <svg id="mixed-example-svg" class="dist-example-svg"
+                                        aria-label="Mixed zero-inflated distribution example chart"></svg>
+                                    <p class="dist-example-note">
+                                        The tall bar at £0 is a real probability mass (π = 0.45). On days when spending
+                                        occurs it follows a continuous exponential-like density — two different
+                                        probability mechanisms in one variable.
+                                    </p>
                                 </div>
                                 <div class="dist-impact-block">
                                     <span class="dist-rule-label">Distribution shape impact</span>

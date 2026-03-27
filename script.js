@@ -1408,6 +1408,199 @@ updateLearningComparison();
 updateSimulationChart();
 updateLessonFlow();
 
+// ---- Static example charts inside distribution type cards ----
+
+function drawDiscreteExample() {
+    const svg = d3.select("#discrete-example-svg");
+    const W = 320, H = 160;
+    const m = { top: 20, right: 12, bottom: 32, left: 36 };
+    const iW = W - m.left - m.right;
+    const iH = H - m.top - m.bottom;
+    const lambda = 3;
+    const data = d3.range(0, 10).map(k => ({ k, p: poissonProbability(k, lambda) }));
+
+    svg.attr("viewBox", `0 0 ${W} ${H}`);
+
+    const xScale = d3.scaleBand().domain(data.map(d => d.k)).range([0, iW]).padding(0.25);
+    const yScale = d3.scaleLinear().domain([0, d3.max(data, d => d.p) * 1.15]).range([iH, 0]);
+
+    const g = svg.append("g").attr("transform", `translate(${m.left},${m.top})`);
+
+    g.selectAll("rect").data(data).join("rect")
+        .attr("x", d => xScale(d.k))
+        .attr("y", d => yScale(d.p))
+        .attr("width", xScale.bandwidth())
+        .attr("height", d => iH - yScale(d.p))
+        .attr("fill", "#4285f4")
+        .attr("rx", 2);
+
+    // Highlight highest bar
+    const peak = data.reduce((a, b) => b.p > a.p ? b : a);
+    g.append("rect")
+        .attr("x", xScale(peak.k))
+        .attr("y", yScale(peak.p))
+        .attr("width", xScale.bandwidth())
+        .attr("height", iH - yScale(peak.p))
+        .attr("fill", "#1558d6")
+        .attr("rx", 2);
+    g.append("text")
+        .attr("x", xScale(peak.k) + xScale.bandwidth() / 2)
+        .attr("y", yScale(peak.p) - 5)
+        .attr("text-anchor", "middle")
+        .attr("font-size", 9)
+        .attr("fill", "#1558d6")
+        .attr("font-family", "Roboto, sans-serif")
+        .text(`P(${peak.k})=${peak.p.toFixed(2)}`);
+
+    g.append("g").attr("class", "axis").attr("transform", `translate(0,${iH})`)
+        .call(d3.axisBottom(xScale).tickSize(3));
+    g.append("g").attr("class", "axis")
+        .call(d3.axisLeft(yScale).ticks(4).tickFormat(d3.format(".2f")).tickSize(3));
+
+    g.append("text").attr("x", iW / 2).attr("y", iH + 28)
+        .attr("text-anchor", "middle").attr("font-size", 10)
+        .attr("fill", "#5f6368").attr("font-family", "Roboto, sans-serif")
+        .text("Support calls per hour (k)");
+    g.append("text").attr("transform", "rotate(-90)").attr("x", -iH / 2).attr("y", -28)
+        .attr("text-anchor", "middle").attr("font-size", 10)
+        .attr("fill", "#5f6368").attr("font-family", "Roboto, sans-serif")
+        .text("P(X = k)");
+}
+
+function drawContinuousExample() {
+    const svg = d3.select("#continuous-example-svg");
+    const W = 320, H = 160;
+    const m = { top: 20, right: 12, bottom: 32, left: 36 };
+    const iW = W - m.left - m.right;
+    const iH = H - m.top - m.bottom;
+    const mu = 170, sigma = 8;
+    const xMin = 140, xMax = 200;
+    const pts = d3.range(xMin, xMax, 0.5).map(x => ({ x, y: normalDensity(x, mu, sigma) }));
+    const shaded = pts.filter(d => d.x >= mu - sigma && d.x <= mu + sigma);
+
+    svg.attr("viewBox", `0 0 ${W} ${H}`);
+
+    const xScale = d3.scaleLinear().domain([xMin, xMax]).range([0, iW]);
+    const yScale = d3.scaleLinear().domain([0, d3.max(pts, d => d.y) * 1.15]).range([iH, 0]);
+
+    const g = svg.append("g").attr("transform", `translate(${m.left},${m.top})`);
+
+    const area = d3.area().x(d => xScale(d.x)).y0(iH).y1(d => yScale(d.y)).curve(d3.curveMonotoneX);
+    const line = d3.line().x(d => xScale(d.x)).y(d => yScale(d.y)).curve(d3.curveMonotoneX);
+
+    // Shaded 1σ region
+    g.append("path").datum(shaded).attr("fill", "#34a853").attr("opacity", 0.2).attr("d", area);
+
+    // Annotation bracket
+    g.append("line")
+        .attr("x1", xScale(mu - sigma)).attr("x2", xScale(mu + sigma))
+        .attr("y1", iH - 6).attr("y2", iH - 6)
+        .attr("stroke", "#34a853").attr("stroke-width", 1.5);
+    g.append("text")
+        .attr("x", xScale(mu)).attr("y", iH - 10)
+        .attr("text-anchor", "middle").attr("font-size", 9)
+        .attr("fill", "#137333").attr("font-family", "Roboto, sans-serif")
+        .text("≈68% of area");
+
+    // Curve
+    g.append("path").datum(pts).attr("fill", "none")
+        .attr("stroke", "#34a853").attr("stroke-width", 2.5).attr("d", line);
+
+    // Mean line
+    g.append("line")
+        .attr("x1", xScale(mu)).attr("x2", xScale(mu))
+        .attr("y1", 0).attr("y2", iH)
+        .attr("stroke", "#1a73e8").attr("stroke-width", 1.5).attr("stroke-dasharray", "4,3");
+    g.append("text")
+        .attr("x", xScale(mu) + 4).attr("y", 12)
+        .attr("font-size", 9).attr("fill", "#1a73e8").attr("font-family", "Roboto, sans-serif")
+        .text("μ=170");
+
+    g.append("g").attr("class", "axis").attr("transform", `translate(0,${iH})`)
+        .call(d3.axisBottom(xScale).ticks(5).tickSize(3));
+    g.append("g").attr("class", "axis")
+        .call(d3.axisLeft(yScale).ticks(3).tickFormat(d3.format(".3f")).tickSize(3));
+
+    g.append("text").attr("x", iW / 2).attr("y", iH + 28)
+        .attr("text-anchor", "middle").attr("font-size", 10)
+        .attr("fill", "#5f6368").attr("font-family", "Roboto, sans-serif")
+        .text("Height (cm)");
+    g.append("text").attr("transform", "rotate(-90)").attr("x", -iH / 2).attr("y", -28)
+        .attr("text-anchor", "middle").attr("font-size", 10)
+        .attr("fill", "#5f6368").attr("font-family", "Roboto, sans-serif")
+        .text("Density f(x)");
+}
+
+function drawMixedExample() {
+    const svg = d3.select("#mixed-example-svg");
+    const W = 320, H = 160;
+    const m = { top: 20, right: 12, bottom: 32, left: 36 };
+    const iW = W - m.left - m.right;
+    const iH = H - m.top - m.bottom;
+    const pi = 0.45, posMean = 3;
+    const xMax = 12;
+    const pts = d3.range(0.01, xMax, 0.15).map(x => ({
+        x,
+        y: (1 - pi) * (1 / posMean) * Math.exp(-x / posMean)
+    }));
+
+    svg.attr("viewBox", `0 0 ${W} ${H}`);
+
+    // x domain: 0 to xMax, but give x=0 its own space via band trick
+    const xScale = d3.scaleLinear().domain([-0.6, xMax]).range([0, iW]);
+    const spikeHeight = pi;
+    const continuousMax = d3.max(pts, d => d.y);
+    const yTop = Math.max(spikeHeight, continuousMax) * 1.15;
+    const yScale = d3.scaleLinear().domain([0, yTop]).range([iH, 0]);
+
+    const g = svg.append("g").attr("transform", `translate(${m.left},${m.top})`);
+
+    const line = d3.line().x(d => xScale(d.x)).y(d => yScale(d.y)).curve(d3.curveCatmullRom);
+
+    // Continuous density fill
+    const area = d3.area().x(d => xScale(d.x)).y0(iH).y1(d => yScale(d.y)).curve(d3.curveCatmullRom);
+    g.append("path").datum(pts).attr("fill", "#fbbc04").attr("opacity", 0.18).attr("d", area);
+    g.append("path").datum(pts).attr("fill", "none")
+        .attr("stroke", "#e37400").attr("stroke-width", 2.5).attr("d", line);
+
+    // Zero spike
+    const spikeX = xScale(0);
+    const barW = 14;
+    g.append("rect")
+        .attr("x", spikeX - barW / 2).attr("y", yScale(spikeHeight))
+        .attr("width", barW).attr("height", iH - yScale(spikeHeight))
+        .attr("fill", "#ea4335").attr("opacity", 0.85).attr("rx", 2);
+    g.append("text")
+        .attr("x", spikeX).attr("y", yScale(spikeHeight) - 5)
+        .attr("text-anchor", "middle").attr("font-size", 9)
+        .attr("fill", "#c5221f").attr("font-family", "Roboto, sans-serif")
+        .text(`π=${pi}`);
+
+    // Labels
+    g.append("text")
+        .attr("x", xScale(5)).attr("y", yScale(continuousMax * 0.75))
+        .attr("font-size", 9).attr("fill", "#e37400").attr("font-family", "Roboto, sans-serif")
+        .text("continuous density");
+
+    g.append("g").attr("class", "axis").attr("transform", `translate(0,${iH})`)
+        .call(d3.axisBottom(xScale).tickValues([0, 3, 6, 9, 12]).tickSize(3));
+    g.append("g").attr("class", "axis")
+        .call(d3.axisLeft(yScale).ticks(3).tickFormat(d3.format(".2f")).tickSize(3));
+
+    g.append("text").attr("x", iW / 2).attr("y", iH + 28)
+        .attr("text-anchor", "middle").attr("font-size", 10)
+        .attr("fill", "#5f6368").attr("font-family", "Roboto, sans-serif")
+        .text("Daily spend (£)");
+    g.append("text").attr("transform", "rotate(-90)").attr("x", -iH / 2).attr("y", -28)
+        .attr("text-anchor", "middle").attr("font-size", 10)
+        .attr("fill", "#5f6368").attr("font-family", "Roboto, sans-serif")
+        .text("Probability / density");
+}
+
+drawDiscreteExample();
+drawContinuousExample();
+drawMixedExample();
+
 // ---- 6. Functions and Non-functions ----
 
 const CURVE_DEFS = {
