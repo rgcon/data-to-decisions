@@ -168,6 +168,10 @@ const lessonNarratives = [
         title: "Watch frequency stabilize",
         text: "The law of large numbers connects theory to data. Even noisy samples tend to settle around the underlying probability when the experiment is repeated enough times.",
     },
+    {
+        title: "Understand functions vs non-functions",
+        text: "Every probability distribution, model formula, and activation function relies on the concept of a mathematical function. The vertical line test reveals which relations qualify and why domain restrictions matter in modelling.",
+    },
 ];
 
 const dieSvg = d3.select("#die-svg");
@@ -176,6 +180,7 @@ const simulationSvg = d3.select("#simulation-svg");
 const distributionSvg = d3.select("#distribution-svg");
 const learningSvg = d3.select("#learning-svg");
 const conceptSvg = d3.select("#concept-svg");
+const functionSvg = d3.select("#function-svg");
 
 const dieSummary = document.querySelector("#die-summary");
 const dieEventSelect = document.querySelector("#die-event");
@@ -183,6 +188,10 @@ const distributionTypeSelect = document.querySelector("#distribution-type");
 const distributionSummary = document.querySelector("#distribution-summary");
 const learningComparison = document.querySelector("#learning-comparison");
 const parameterGroups = Array.from(document.querySelectorAll(".parameter-group"));
+const functionTypeSelect = document.querySelector("#function-type");
+const verticalLineInput = document.querySelector("#vertical-line-x");
+const verticalLineXValue = document.querySelector("#vertical-line-x-value");
+const functionResult = document.querySelector("#function-result");
 const poissonRateInput = document.querySelector("#poisson-rate");
 const poissonRateValue = document.querySelector("#poisson-rate-value");
 const normalMeanInput = document.querySelector("#normal-mean");
@@ -1398,3 +1407,265 @@ updateBinomialChart();
 updateLearningComparison();
 updateSimulationChart();
 updateLessonFlow();
+
+// ---- 6. Functions and Non-functions ----
+
+const CURVE_DEFS = {
+    parabola: {
+        label: "y = x\u00b2",
+        isFunction: true,
+        xDomain: [-3.2, 3.2],
+        yDomain: [-0.5, 10],
+        sliderMin: -3, sliderMax: 3, sliderStep: 0.1, sliderDefault: 1,
+        points() {
+            const pts = [];
+            for (let i = 0; i <= 300; i++) {
+                const x = -3.2 + (6.4 * i) / 300;
+                pts.push({ x, y: x * x });
+            }
+            return pts;
+        },
+        intersections: (xv) => [{ x: xv, y: xv * xv }],
+        resultText: (xv) =>
+            `At x = ${xv.toFixed(1)}: f(x) = (${xv.toFixed(1)})\u00b2 = ${(xv * xv).toFixed(2)} \u2014 exactly one output`,
+    },
+    sine: {
+        label: "y = sin(x)",
+        isFunction: true,
+        xDomain: [-Math.PI - 0.3, Math.PI + 0.3],
+        yDomain: [-1.7, 1.7],
+        sliderMin: -3.1, sliderMax: 3.1, sliderStep: 0.1, sliderDefault: 1,
+        points() {
+            const pts = [];
+            for (let i = 0; i <= 300; i++) {
+                const x = (-Math.PI - 0.3) + ((Math.PI * 2 + 0.6) * i) / 300;
+                pts.push({ x, y: Math.sin(x) });
+            }
+            return pts;
+        },
+        intersections: (xv) => [{ x: xv, y: Math.sin(xv) }],
+        resultText: (xv) =>
+            `At x = ${xv.toFixed(1)}: f(x) = sin(${xv.toFixed(1)}) \u2248 ${Math.sin(xv).toFixed(3)} \u2014 exactly one output`,
+    },
+    sqrt: {
+        label: "y = \u221ax",
+        isFunction: true,
+        xDomain: [-0.5, 9.5],
+        yDomain: [-0.4, 3.2],
+        sliderMin: 0, sliderMax: 9, sliderStep: 0.25, sliderDefault: 4,
+        points() {
+            const pts = [];
+            for (let i = 0; i <= 300; i++) {
+                const x = (9 * i) / 300;
+                pts.push({ x, y: Math.sqrt(x) });
+            }
+            return pts;
+        },
+        intersections: (xv) => (xv < 0 ? [] : [{ x: xv, y: Math.sqrt(xv) }]),
+        resultText: (xv) =>
+            xv < 0
+                ? `x = ${xv.toFixed(1)} is outside the domain (x \u2265 0) \u2014 no output`
+                : `At x = ${xv.toFixed(1)}: f(x) = \u221a${xv.toFixed(1)} \u2248 ${Math.sqrt(xv).toFixed(3)} \u2014 exactly one output`,
+    },
+    circle: {
+        label: "x\u00b2 + y\u00b2 = 9",
+        isFunction: false,
+        xDomain: [-3.8, 3.8],
+        yDomain: [-3.8, 3.8],
+        sliderMin: -3, sliderMax: 3, sliderStep: 0.1, sliderDefault: 1.5,
+        points() {
+            const pts = [];
+            for (let i = 0; i <= 360; i++) {
+                const a = (2 * Math.PI * i) / 360;
+                pts.push({ x: 3 * Math.cos(a), y: 3 * Math.sin(a) });
+            }
+            return pts;
+        },
+        intersections(xv) {
+            const r2 = 9 - xv * xv;
+            if (r2 < 0) return [];
+            if (Math.abs(r2) < 1e-6) return [{ x: xv, y: 0 }];
+            const y = Math.sqrt(r2);
+            return [{ x: xv, y }, { x: xv, y: -y }];
+        },
+        resultText(xv) {
+            const r2 = 9 - xv * xv;
+            if (r2 < 0) return `x = ${xv.toFixed(1)} is outside the circle (\u2014 |x| must be \u2264 3)`;
+            if (Math.abs(r2) < 1e-6) return `x = \u00b13 is a tangent point \u2014 y = 0 only`;
+            const y = Math.sqrt(r2).toFixed(2);
+            return `At x = ${xv.toFixed(1)}: y = +${y} and y = \u2212${y} \u2014 two outputs, FAILS the vertical line test`;
+        },
+    },
+    "sideways-parabola": {
+        label: "x = y\u00b2",
+        isFunction: false,
+        xDomain: [-0.5, 9.5],
+        yDomain: [-3.2, 3.2],
+        sliderMin: 0, sliderMax: 9, sliderStep: 0.25, sliderDefault: 4,
+        points() {
+            const pts = [];
+            for (let i = 0; i <= 300; i++) {
+                const y = -3 + (6 * i) / 300;
+                pts.push({ x: y * y, y });
+            }
+            return pts;
+        },
+        intersections(xv) {
+            if (xv < 0) return [];
+            if (Math.abs(xv) < 1e-6) return [{ x: 0, y: 0 }];
+            const y = Math.sqrt(xv);
+            return [{ x: xv, y }, { x: xv, y: -y }];
+        },
+        resultText(xv) {
+            if (xv < 0) return `x = ${xv.toFixed(1)} is outside this relation's domain`;
+            if (Math.abs(xv) < 1e-6) return `x = 0: vertex \u2014 y = 0 only`;
+            const y = Math.sqrt(xv).toFixed(2);
+            return `At x = ${xv.toFixed(1)}: y = +${y} and y = \u2212${y} \u2014 two outputs, FAILS the vertical line test`;
+        },
+    },
+};
+
+function updateFunctionChart() {
+    const type = functionTypeSelect.value;
+    const xVal = parseFloat(verticalLineInput.value);
+    verticalLineXValue.textContent = xVal.toFixed(1);
+
+    const def = CURVE_DEFS[type];
+    const intersections = def.intersections(xVal);
+    const passes = intersections.length <= 1;
+
+    functionResult.innerHTML = `
+        <span class="metric-label">${def.isFunction ? "Function" : "Relation \u2014 not a function"}</span>
+        <strong>${passes ? "\u2713 Passes the vertical line test" : "\u2717 Fails the vertical line test"}</strong>
+        <p>${def.resultText(xVal)}</p>
+    `;
+    functionResult.style.borderLeftWidth = "4px";
+    functionResult.style.borderLeftColor = passes ? "#34a853" : "#ea4335";
+
+    const width = 660;
+    const height = 390;
+    const margin = { top: 44, right: 24, bottom: 44, left: 50 };
+    const innerW = width - margin.left - margin.right;
+    const innerH = height - margin.top - margin.bottom;
+
+    functionSvg.attr("viewBox", `0 0 ${width} ${height}`);
+    functionSvg.selectAll("*").remove();
+
+    const xScale = d3.scaleLinear().domain(def.xDomain).range([0, innerW]);
+    const yScale = d3.scaleLinear().domain(def.yDomain).range([innerH, 0]);
+
+    functionSvg.append("text")
+        .attr("class", "chart-title")
+        .attr("x", margin.left)
+        .attr("y", 24)
+        .text(`Graph of  ${def.label}`);
+
+    const g = functionSvg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // Light grid zero lines
+    const y0 = yScale(0);
+    const x0 = xScale(0);
+    if (y0 >= 0 && y0 <= innerH) {
+        g.append("line").attr("x1", 0).attr("x2", innerW)
+            .attr("y1", y0).attr("y2", y0)
+            .attr("stroke", "#dadce0").attr("stroke-width", 1);
+    }
+    if (x0 >= 0 && x0 <= innerW) {
+        g.append("line").attr("x1", x0).attr("x2", x0)
+            .attr("y1", 0).attr("y2", innerH)
+            .attr("stroke", "#dadce0").attr("stroke-width", 1);
+    }
+
+    // Axes
+    g.append("g").attr("class", "axis")
+        .attr("transform", `translate(0,${innerH})`)
+        .call(d3.axisBottom(xScale).ticks(6));
+    g.append("g").attr("class", "axis")
+        .call(d3.axisLeft(yScale).ticks(6));
+    g.append("text").attr("class", "axis-label")
+        .attr("x", innerW / 2).attr("y", innerH + 38)
+        .attr("text-anchor", "middle").text("x");
+    g.append("text").attr("class", "axis-label")
+        .attr("transform", "rotate(-90)")
+        .attr("x", -innerH / 2).attr("y", -42)
+        .attr("text-anchor", "middle").text("y");
+
+    // Curve
+    const curveColor = def.isFunction ? "#1a73e8" : "#ea4335";
+    const pts = def.points();
+    const lineGen = type === "circle"
+        ? d3.line().x(d => xScale(d.x)).y(d => yScale(d.y)).curve(d3.curveCatmullRomClosed)
+        : d3.line().x(d => xScale(d.x)).y(d => yScale(d.y));
+
+    g.append("path").datum(pts)
+        .attr("fill", "none")
+        .attr("stroke", curveColor)
+        .attr("stroke-width", 2.5)
+        .attr("d", lineGen);
+
+    // Curve label
+    g.append("text").attr("class", "distribution-label")
+        .attr("x", innerW - 4).attr("y", 12)
+        .attr("text-anchor", "end")
+        .attr("fill", curveColor).attr("font-weight", "500")
+        .text(def.label);
+
+    // Vertical test line
+    const vxScreen = xScale(xVal);
+    const lineInBounds = vxScreen >= 0 && vxScreen <= innerW;
+    if (lineInBounds) {
+        g.append("line")
+            .attr("x1", vxScreen).attr("x2", vxScreen)
+            .attr("y1", 0).attr("y2", innerH)
+            .attr("stroke", "#fbbc04").attr("stroke-width", 2)
+            .attr("stroke-dasharray", "6,3");
+        g.append("text")
+            .attr("x", vxScreen + 5).attr("y", 14)
+            .attr("fill", "#b06700").attr("font-size", 11)
+            .text(`x = ${xVal.toFixed(1)}`);
+    }
+
+    // Intersection dots
+    const dotColor = passes ? "#34a853" : "#ea4335";
+    intersections.forEach((pt) => {
+        const sx = xScale(pt.x);
+        const sy = yScale(pt.y);
+        if (sx >= 0 && sx <= innerW && sy >= 0 && sy <= innerH) {
+            g.append("circle")
+                .attr("cx", sx).attr("cy", sy).attr("r", 7)
+                .attr("fill", dotColor).attr("stroke", "#fff").attr("stroke-width", 2);
+        }
+    });
+
+    // Result badge
+    if (lineInBounds) {
+        const badgeText = intersections.length === 0 ? "No intersection"
+            : intersections.length === 1 ? "1 intersection \u2014 \u2713 function"
+                : `${intersections.length} intersections \u2014 \u2717 not a function`;
+        const badgeColor = passes ? "#34a853" : "#ea4335";
+        const badgeX = Math.min(Math.max(vxScreen + 10, 10), innerW - 190);
+        const badgeY = innerH - 16;
+        g.append("rect")
+            .attr("x", badgeX - 6).attr("y", badgeY - 16)
+            .attr("width", 210).attr("height", 22).attr("rx", 4)
+            .attr("fill", badgeColor).attr("opacity", 0.12);
+        g.append("text")
+            .attr("x", badgeX).attr("y", badgeY)
+            .attr("fill", badgeColor).attr("font-size", 11).attr("font-weight", "500")
+            .attr("font-family", "Roboto, Segoe UI, sans-serif")
+            .text(badgeText);
+    }
+}
+
+functionTypeSelect.addEventListener("change", () => {
+    const def = CURVE_DEFS[functionTypeSelect.value];
+    verticalLineInput.min = def.sliderMin;
+    verticalLineInput.max = def.sliderMax;
+    verticalLineInput.step = def.sliderStep;
+    verticalLineInput.value = def.sliderDefault;
+    verticalLineXValue.textContent = parseFloat(def.sliderDefault).toFixed(1);
+    updateFunctionChart();
+});
+
+verticalLineInput.addEventListener("input", updateFunctionChart);
+updateFunctionChart();

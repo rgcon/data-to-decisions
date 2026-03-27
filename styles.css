@@ -793,3 +793,34 @@ button.ghost:hover {
         grid-template-columns: 1fr;
     }
 }
+
+/* ---- Functions & non-functions cards ---- */
+
+.fn-type-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.fn-is-function {
+    border-top-color: #34a853;
+}
+
+.fn-not-function {
+    border-top-color: #ea4335;
+}
+
+.fn-is-function .module-kicker {
+    color: #34a853;
+}
+
+.fn-not-function .module-kicker {
+    color: #ea4335;
+}
+
+@media (max-width: 960px) {
+    .fn-type-grid {
+        grid-template-columns: 1fr;
+    }
+}
