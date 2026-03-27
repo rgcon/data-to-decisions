@@ -172,6 +172,10 @@ const lessonNarratives = [
         title: "Understand functions vs non-functions",
         text: "Every probability distribution, model formula, and activation function relies on the concept of a mathematical function. The vertical line test reveals which relations qualify and why domain restrictions matter in modelling.",
     },
+    {
+        title: "Connect loss, entropy, and optimization",
+        text: "Training a model means minimizing a loss function. Entropy quantifies uncertainty in the data distribution, gradients provide local slope information, and gradient descent applies that information to reduce loss step by step.",
+    },
 ];
 
 const dieSvg = d3.select("#die-svg");
@@ -1600,6 +1604,155 @@ function drawMixedExample() {
 drawDiscreteExample();
 drawContinuousExample();
 drawMixedExample();
+
+// ---- 7. Loss, entropy, gradient, descent mini-charts ----
+
+function drawLossExample() {
+    const svg = d3.select("#loss-example-svg");
+    if (svg.empty()) return;
+
+    const W = 320, H = 170;
+    const m = { top: 18, right: 12, bottom: 34, left: 36 };
+    const iW = W - m.left - m.right;
+    const iH = H - m.top - m.bottom;
+
+    const x = d3.scaleLinear().domain([-3, 3]).range([0, iW]);
+    const y = d3.scaleLinear().domain([0, 9.5]).range([iH, 0]);
+    const data = d3.range(-3, 3.01, 0.05).map((e) => ({ e, l: e * e }));
+    const line = d3.line().x((d) => x(d.e)).y((d) => y(d.l)).curve(d3.curveMonotoneX);
+
+    svg.attr("viewBox", `0 0 ${W} ${H}`);
+    const g = svg.append("g").attr("transform", `translate(${m.left},${m.top})`);
+
+    g.append("path").datum(data).attr("fill", "none").attr("stroke", "#1a73e8").attr("stroke-width", 2.5).attr("d", line);
+    g.append("circle").attr("cx", x(0)).attr("cy", y(0)).attr("r", 5).attr("fill", "#34a853");
+    g.append("text").attr("x", x(0) + 8).attr("y", y(0) - 6).attr("font-size", 9).attr("fill", "#137333").text("minimum");
+
+    g.append("g").attr("class", "axis").attr("transform", `translate(0,${iH})`).call(d3.axisBottom(x).ticks(5));
+    g.append("g").attr("class", "axis").call(d3.axisLeft(y).ticks(4));
+}
+
+function drawEntropyExample() {
+    const svg = d3.select("#entropy-example-svg");
+    if (svg.empty()) return;
+
+    const W = 320, H = 170;
+    const m = { top: 18, right: 12, bottom: 34, left: 36 };
+    const iW = W - m.left - m.right;
+    const iH = H - m.top - m.bottom;
+
+    const safeLog2 = (v) => (v <= 0 ? 0 : Math.log2(v));
+    const entropy = (p) => -(p * safeLog2(p) + (1 - p) * safeLog2(1 - p));
+    const data = d3.range(0.001, 1, 0.005).map((p) => ({ p, h: entropy(p) }));
+
+    const x = d3.scaleLinear().domain([0, 1]).range([0, iW]);
+    const y = d3.scaleLinear().domain([0, 1.05]).range([iH, 0]);
+    const line = d3.line().x((d) => x(d.p)).y((d) => y(d.h)).curve(d3.curveMonotoneX);
+
+    svg.attr("viewBox", `0 0 ${W} ${H}`);
+    const g = svg.append("g").attr("transform", `translate(${m.left},${m.top})`);
+
+    g.append("path").datum(data).attr("fill", "none").attr("stroke", "#34a853").attr("stroke-width", 2.5).attr("d", line);
+    g.append("circle").attr("cx", x(0.5)).attr("cy", y(1)).attr("r", 5).attr("fill", "#fbbc04");
+    g.append("text").attr("x", x(0.5) + 8).attr("y", y(1) - 6).attr("font-size", 9).attr("fill", "#b06700").text("max at p=0.5");
+
+    g.append("g").attr("class", "axis").attr("transform", `translate(0,${iH})`).call(d3.axisBottom(x).ticks(5));
+    g.append("g").attr("class", "axis").call(d3.axisLeft(y).ticks(4));
+}
+
+function drawGradientExample() {
+    const svg = d3.select("#gradient-example-svg");
+    if (svg.empty()) return;
+
+    const W = 320, H = 170;
+    const m = { top: 18, right: 12, bottom: 34, left: 36 };
+    const iW = W - m.left - m.right;
+    const iH = H - m.top - m.bottom;
+
+    const x = d3.scaleLinear().domain([-2.5, 2.5]).range([0, iW]);
+    const y = d3.scaleLinear().domain([0, 7]).range([iH, 0]);
+    const f = (v) => v * v;
+    const data = d3.range(-2.5, 2.51, 0.05).map((v) => ({ v, f: f(v) }));
+    const line = d3.line().x((d) => x(d.v)).y((d) => y(d.f)).curve(d3.curveMonotoneX);
+
+    const x0 = 1.4;
+    const y0 = f(x0);
+    const slope = 2 * x0;
+    const tx1 = x0 - 0.8;
+    const tx2 = x0 + 0.8;
+    const ty1 = y0 + slope * (tx1 - x0);
+    const ty2 = y0 + slope * (tx2 - x0);
+
+    svg.attr("viewBox", `0 0 ${W} ${H}`);
+    const g = svg.append("g").attr("transform", `translate(${m.left},${m.top})`);
+
+    g.append("path").datum(data).attr("fill", "none").attr("stroke", "#1a73e8").attr("stroke-width", 2.5).attr("d", line);
+    g.append("line").attr("x1", x(tx1)).attr("x2", x(tx2)).attr("y1", y(ty1)).attr("y2", y(ty2))
+        .attr("stroke", "#ea4335").attr("stroke-width", 2).attr("stroke-dasharray", "5,4");
+    g.append("circle").attr("cx", x(x0)).attr("cy", y(y0)).attr("r", 5).attr("fill", "#ea4335");
+    g.append("text").attr("x", x(x0) + 8).attr("y", y(y0) - 6).attr("font-size", 9).attr("fill", "#c5221f").text(`slope = ${slope.toFixed(1)}`);
+
+    g.append("g").attr("class", "axis").attr("transform", `translate(0,${iH})`).call(d3.axisBottom(x).ticks(5));
+    g.append("g").attr("class", "axis").call(d3.axisLeft(y).ticks(4));
+}
+
+function drawDescentExample() {
+    const svg = d3.select("#descent-example-svg");
+    if (svg.empty()) return;
+
+    const W = 320, H = 170;
+    const m = { top: 18, right: 12, bottom: 34, left: 36 };
+    const iW = W - m.left - m.right;
+    const iH = H - m.top - m.bottom;
+
+    const x = d3.scaleLinear().domain([-2.5, 2.5]).range([0, iW]);
+    const y = d3.scaleLinear().domain([0, 7]).range([iH, 0]);
+    const f = (v) => v * v;
+    const data = d3.range(-2.5, 2.51, 0.05).map((v) => ({ v, f: f(v) }));
+    const line = d3.line().x((d) => x(d.v)).y((d) => y(d.f)).curve(d3.curveMonotoneX);
+
+    // 1D gradient descent path
+    const eta = 0.25;
+    let theta = 2.0;
+    const steps = [{ theta, loss: f(theta) }];
+    for (let i = 0; i < 6; i += 1) {
+        theta = theta - eta * (2 * theta);
+        steps.push({ theta, loss: f(theta) });
+    }
+
+    svg.attr("viewBox", `0 0 ${W} ${H}`);
+    const g = svg.append("g").attr("transform", `translate(${m.left},${m.top})`);
+
+    g.append("path").datum(data).attr("fill", "none").attr("stroke", "#5f6368").attr("stroke-width", 2).attr("d", line);
+
+    for (let i = 0; i < steps.length - 1; i += 1) {
+        g.append("line")
+            .attr("x1", x(steps[i].theta)).attr("y1", y(steps[i].loss))
+            .attr("x2", x(steps[i + 1].theta)).attr("y2", y(steps[i + 1].loss))
+            .attr("stroke", "#1a73e8").attr("stroke-width", 2);
+    }
+
+    g.selectAll("circle.step")
+        .data(steps)
+        .join("circle")
+        .attr("cx", (d) => x(d.theta))
+        .attr("cy", (d) => y(d.loss))
+        .attr("r", 4.5)
+        .attr("fill", "#1a73e8");
+
+    g.append("text").attr("x", x(steps[0].theta) + 8).attr("y", y(steps[0].loss) - 6)
+        .attr("font-size", 9).attr("fill", "#1a73e8").text("start");
+    g.append("text").attr("x", x(steps[steps.length - 1].theta) + 8).attr("y", y(steps[steps.length - 1].loss) - 6)
+        .attr("font-size", 9).attr("fill", "#137333").text("near minimum");
+
+    g.append("g").attr("class", "axis").attr("transform", `translate(0,${iH})`).call(d3.axisBottom(x).ticks(5));
+    g.append("g").attr("class", "axis").call(d3.axisLeft(y).ticks(4));
+}
+
+drawLossExample();
+drawEntropyExample();
+drawGradientExample();
+drawDescentExample();
 
 // ---- 6. Functions and Non-functions ----
 

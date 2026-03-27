@@ -33,6 +33,7 @@
             <a href="#learning-goals">4. Prediction vs inference</a>
             <a href="#simulation">5. Law of large numbers</a>
             <a href="#functions">6. Functions &amp; non-functions</a>
+            <a href="#optimization-foundations">7. Loss, entropy, gradients</a>
         </nav>
 
         <div class="page-shell">
@@ -654,6 +655,101 @@
                                 <svg id="function-svg"
                                     aria-label="Function and non-function graph with vertical line test"></svg>
                             </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel module module-step dist-section" data-step="6" id="optimization-foundations">
+                    <div class="module-copy">
+                        <p class="module-kicker">7. Optimization foundations</p>
+                        <h2>Loss Functions, Shannon Entropy, Gradient, and Gradient Descent</h2>
+                        <p>
+                            Modern machine learning pipelines rely on four connected ideas: a loss function defines
+                            what "good" predictions mean, entropy quantifies uncertainty in data,
+                            gradients tell us the local direction of fastest increase, and gradient descent uses
+                            the negative gradient direction to iteratively reduce loss.
+                        </p>
+
+                        <div class="foundation-card-grid">
+                            <article class="dist-type-card foundation-loss">
+                                <p class="module-kicker">Loss function</p>
+                                <h3>How wrong is the prediction?</h3>
+                                <p>
+                                    A loss function maps prediction error to a scalar penalty. During training,
+                                    optimization tries to minimize the average loss over the dataset.
+                                </p>
+                                <div class="dist-rule-block">
+                                    <span class="dist-rule-label">Example (MSE)</span>
+                                    <code>L = (y - ŷ)²</code>
+                                    Larger errors receive larger penalties, so the model is pushed toward closer fits.
+                                </div>
+                                <svg id="loss-example-svg" class="foundation-mini-svg"
+                                    aria-label="Mean squared error loss curve"></svg>
+                                <p class="dist-example-note">
+                                    The parabola has its minimum at zero error, showing that exact prediction gives
+                                    the smallest possible loss.
+                                </p>
+                            </article>
+
+                            <article class="dist-type-card foundation-entropy">
+                                <p class="module-kicker">Information theory</p>
+                                <h3>Shannon entropy measures uncertainty</h3>
+                                <p>
+                                    Entropy is highest when outcomes are maximally uncertain and lowest when one
+                                    outcome is almost certain.
+                                </p>
+                                <div class="dist-rule-block">
+                                    <span class="dist-rule-label">Binary entropy</span>
+                                    <code>H(p) = -p log₂ p - (1-p) log₂(1-p)</code>
+                                    In binary outcomes, entropy peaks at <code>p = 0.5</code>.
+                                </div>
+                                <svg id="entropy-example-svg" class="foundation-mini-svg"
+                                    aria-label="Binary Shannon entropy curve"></svg>
+                                <p class="dist-example-note">
+                                    The curve peaks at balanced outcomes and drops near 0 when outcomes become
+                                    predictable.
+                                </p>
+                            </article>
+
+                            <article class="dist-type-card foundation-gradient">
+                                <p class="module-kicker">Gradient</p>
+                                <h3>Direction and rate of steepest increase</h3>
+                                <p>
+                                    The gradient vector points in the direction where a function increases fastest.
+                                    Its magnitude indicates local steepness.
+                                </p>
+                                <div class="dist-rule-block">
+                                    <span class="dist-rule-label">Multivariable form</span>
+                                    <code>∇f = [∂f/∂x₁, ∂f/∂x₂, ..., ∂f/∂xₙ]</code>
+                                    Optimization uses this local slope information to update parameters.
+                                </div>
+                                <svg id="gradient-example-svg" class="foundation-mini-svg"
+                                    aria-label="Gradient vector on a convex function"></svg>
+                                <p class="dist-example-note">
+                                    At a point on the curve, the tangent slope gives gradient information used
+                                    to decide the update direction.
+                                </p>
+                            </article>
+
+                            <article class="dist-type-card foundation-descent">
+                                <p class="module-kicker">Gradient descent</p>
+                                <h3>Iterative optimization by moving downhill</h3>
+                                <p>
+                                    Starting from an initial parameter guess, gradient descent repeatedly updates
+                                    parameters in the negative gradient direction to reduce loss.
+                                </p>
+                                <div class="dist-rule-block">
+                                    <span class="dist-rule-label">Update rule</span>
+                                    <code>θₜ₊₁ = θₜ - η ∇L(θₜ)</code>
+                                    Learning rate <code>η</code> controls the step size each iteration.
+                                </div>
+                                <svg id="descent-example-svg" class="foundation-mini-svg"
+                                    aria-label="Gradient descent steps on a loss curve"></svg>
+                                <p class="dist-example-note">
+                                    Successive points move toward the minimum of the loss surface as updates are
+                                    applied.
+                                </p>
+                            </article>
                         </div>
                     </div>
                 </section>

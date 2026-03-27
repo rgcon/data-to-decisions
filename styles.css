@@ -910,3 +910,44 @@ button.ghost:hover {
         grid-template-columns: 1fr;
     }
 }
+
+/* ---- Optimization foundations cards ---- */
+
+.foundation-card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 14px;
+}
+
+.foundation-mini-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    min-height: 170px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+}
+
+.foundation-loss {
+    border-top-color: #4285f4;
+}
+
+.foundation-entropy {
+    border-top-color: #34a853;
+}
+
+.foundation-gradient {
+    border-top-color: #ea4335;
+}
+
+.foundation-descent {
+    border-top-color: #1a73e8;
+}
+
+@media (max-width: 960px) {
+    .foundation-card-grid {
+        grid-template-columns: 1fr;
+    }
+}
