@@ -923,8 +923,8 @@ button.ghost:hover {
 .foundation-mini-svg {
     display: block;
     width: 100%;
-    height: auto;
-    min-height: 170px;
+    height: 190px;
+    min-height: 190px;
     background: #fff;
     border: 1px solid var(--border);
     border-radius: 6px;

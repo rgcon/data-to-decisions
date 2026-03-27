@@ -1357,10 +1357,9 @@ function updateLessonFlow(shouldScroll = false) {
     const totalSteps = lessonSections.length;
 
     lessonSections.forEach((section, index) => {
-        const isVisible = index <= currentLessonStep;
         const isCurrent = index === currentLessonStep;
 
-        section.hidden = !isVisible;
+        section.hidden = false;
         section.classList.toggle("is-current", isCurrent);
     });
 
