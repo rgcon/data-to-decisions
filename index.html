@@ -247,14 +247,105 @@
                     <p class="module-kicker">1. Distribution families</p>
                     <h2>Discrete, continuous, and mixed variables</h2>
                     <p>
-                        The first modeling decision is the variable type. Discrete variables place probability on
-                        countable
-                        values. Continuous variables spread probability through a density over intervals. Mixed
-                        variables do
-                        both, usually with a point mass plus a continuous component.
+                        The variable type is the most fundamental modeling decision you make. It determines
+                        <em>how probability is assigned</em>, which mathematical tools apply, and what
+                        questions you can ask about the data.
                     </p>
-                    <div class="controls-row">
-                        <label for="distribution-type">Choose a distribution family</label>
+
+                    <div class="dist-type-grid">
+                        <div class="dist-type-card dist-type-discrete">
+                            <p class="module-kicker">Discrete</p>
+                            <h3>Countable outcomes</h3>
+                            <p>
+                                A discrete variable takes values from a finite or countably infinite set —
+                                whole numbers, categories, counts. Probability is assigned to each individual
+                                outcome as a <strong>probability mass</strong>.
+                            </p>
+                            <div class="dist-rule-block">
+                                <span class="dist-rule-label">Probability rule</span>
+                                <code>P(X = k)</code> is defined for every value <code>k</code>.
+                                All masses sum to exactly 1.
+                            </div>
+                            <div class="dist-impact-block">
+                                <span class="dist-rule-label">Distribution shape impact</span>
+                                <p>
+                                    Increasing the Poisson rate <strong>λ</strong> shifts the mass to the
+                                    right and spreads it wider. A low λ produces a steep spike near 0.
+                                    A high λ produces a broad, approximately bell-shaped mass function.
+                                    You can never ask "what is the probability of exactly 2.7?" — only
+                                    integer values carry mass.
+                                </p>
+                            </div>
+                            <ul class="dist-facts">
+                                <li>Mean = λ, Variance = λ (Poisson)</li>
+                                <li>Chart shows bars at integer values only</li>
+                                <li>Real uses: counts of events, defects, arrivals</li>
+                            </ul>
+                        </div>
+
+                        <div class="dist-type-card dist-type-continuous">
+                            <p class="module-kicker">Continuous</p>
+                            <h3>Interval-based probability</h3>
+                            <p>
+                                A continuous variable can take any value in an interval. No single point
+                                carries probability mass — instead probability is spread through a
+                                <strong>probability density function (PDF)</strong>.
+                            </p>
+                            <div class="dist-rule-block">
+                                <span class="dist-rule-label">Probability rule</span>
+                                <code>P(a ≤ X ≤ b) = ∫ f(x) dx</code> over [a, b].
+                                <code>P(X = k) = 0</code> for any exact value.
+                            </div>
+                            <div class="dist-impact-block">
+                                <span class="dist-rule-label">Distribution shape impact</span>
+                                <p>
+                                    Moving <strong>μ</strong> shifts the bell curve left or right without
+                                    changing its shape. Increasing <strong>σ</strong> flattens and widens
+                                    the curve — more probability mass spreads into the tails.
+                                    Decreasing σ concentrates mass tightly around the mean,
+                                    making extreme values very unlikely.
+                                </p>
+                            </div>
+                            <ul class="dist-facts">
+                                <li>Mean = μ, Variance = σ² (Normal)</li>
+                                <li>Area under the curve always equals 1</li>
+                                <li>Real uses: heights, temperatures, measurement errors</li>
+                            </ul>
+                        </div>
+
+                        <div class="dist-type-card dist-type-mixed">
+                            <p class="module-kicker">Mixed</p>
+                            <h3>Point mass + continuous density</h3>
+                            <p>
+                                A mixed variable combines both: a real probability spike at one or more
+                                exact values, plus a continuous density elsewhere. This is
+                                <em>not</em> an approximation — both components are real.
+                            </p>
+                            <div class="dist-rule-block">
+                                <span class="dist-rule-label">Probability rule</span>
+                                <code>P(X = 0) = π</code> (mass spike) and
+                                <code>P(a ≤ X ≤ b) = (1−π) · ∫ f(x) dx</code> for the continuous part.
+                            </div>
+                            <div class="dist-impact-block">
+                                <span class="dist-rule-label">Distribution shape impact</span>
+                                <p>
+                                    Increasing <strong>π</strong> makes the zero-spike taller while
+                                    flattening the continuous tail — more of the total probability sits
+                                    at exactly zero. Decreasing π does the opposite: the spike shrinks
+                                    and the continuous density dominates.
+                                    The positive-part mean shifts where the tail mass is centered.
+                                </p>
+                            </div>
+                            <ul class="dist-facts">
+                                <li>E[X] = (1−π) · μ<sub>+</sub></li>
+                                <li>Chart shows a bar at 0 plus a density curve</li>
+                                <li>Real uses: insurance claims, usage data with many zeros</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="controls-row" style="margin-top:20px;">
+                        <label for="distribution-type">Choose a distribution family to explore interactively</label>
                         <select id="distribution-type">
                             <option value="discrete">Discrete distribution</option>
                             <option value="continuous">Continuous distribution</option>
