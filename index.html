@@ -727,6 +727,16 @@
                                     <input id="entropy-p-slider" type="range" min="0.01" max="0.99" step="0.01"
                                         value="0.5" />
                                 </div>
+                                <div class="dist-example-chart-wrap">
+                                    <span class="dist-rule-label">Black box vs white box entropy pattern</span>
+                                    <svg id="entropy-pattern-svg" class="foundation-mini-svg"
+                                        aria-label="Black box and white box entropy explanation"></svg>
+                                    <p class="dist-example-note">
+                                        Left: black-box view reads only predicted class probabilities and their
+                                        uncertainty. Right: white-box view inspects an internal split where entropy
+                                        drops from parent to children, creating information gain.
+                                    </p>
+                                </div>
                                 <p class="dist-example-note">
                                     Maximum uncertainty occurs at a fair split. Highly imbalanced classes have lower
                                     entropy, meaning the label is easier to guess even before seeing features.

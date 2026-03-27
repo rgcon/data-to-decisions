@@ -1718,6 +1718,143 @@ function drawEntropyExample() {
     g.append("g").attr("class", "axis").call(d3.axisLeft(y).ticks(4));
 }
 
+function drawEntropyPattern() {
+    const svg = d3.select("#entropy-pattern-svg");
+    if (svg.empty()) return;
+
+    const selectedP = Number(entropyPSlider ? entropyPSlider.value : 0.5);
+    const safeLog2 = (v) => (v <= 0 ? 0 : Math.log2(v));
+    const entropy = (p) => -(p * safeLog2(p) + (1 - p) * safeLog2(1 - p));
+
+    const W = 560;
+    const H = 190;
+    const m = { top: 28, right: 12, bottom: 26, left: 14 };
+    const iW = W - m.left - m.right;
+    const iH = H - m.top - m.bottom;
+
+    svg.attr("viewBox", `0 0 ${W} ${H}`);
+    svg.selectAll("*").remove();
+
+    const g = svg.append("g").attr("transform", `translate(${m.left},${m.top})`);
+    const panelGap = 18;
+    const panelW = (iW - panelGap) / 2;
+
+    // ---- Left panel: black-box output distribution ----
+    const left = g.append("g");
+    left.append("rect")
+        .attr("x", 0).attr("y", 0)
+        .attr("width", panelW).attr("height", iH)
+        .attr("fill", "#f8f9fa").attr("stroke", "#dadce0").attr("rx", 6);
+
+    left.append("text")
+        .attr("x", 8).attr("y", 14)
+        .attr("font-size", 10).attr("font-weight", 600)
+        .attr("fill", "#1a73e8")
+        .text("BLACK-BOX PATTERN");
+
+    left.append("text")
+        .attr("x", 8).attr("y", 28)
+        .attr("font-size", 10).attr("fill", "#5f6368")
+        .text("Use only predicted probabilities");
+
+    const lbY = d3.scaleLinear().domain([0, 1]).range([iH - 18, 38]);
+    const barW = 38;
+    const b1x = panelW * 0.28;
+    const b2x = panelW * 0.58;
+
+    left.append("rect")
+        .attr("x", b1x).attr("y", lbY(selectedP))
+        .attr("width", barW).attr("height", lbY(0) - lbY(selectedP))
+        .attr("fill", "#1a73e8").attr("rx", 3);
+    left.append("rect")
+        .attr("x", b2x).attr("y", lbY(1 - selectedP))
+        .attr("width", barW).attr("height", lbY(0) - lbY(1 - selectedP))
+        .attr("fill", "#34a853").attr("rx", 3);
+
+    left.append("text").attr("x", b1x + barW / 2).attr("y", iH - 6).attr("text-anchor", "middle")
+        .attr("font-size", 9).attr("fill", "#5f6368").text("A");
+    left.append("text").attr("x", b2x + barW / 2).attr("y", iH - 6).attr("text-anchor", "middle")
+        .attr("font-size", 9).attr("fill", "#5f6368").text("B");
+
+    left.append("text")
+        .attr("x", 8).attr("y", iH - 24)
+        .attr("font-size", 10).attr("fill", "#202124")
+        .text(`H(output) = ${entropy(selectedP).toFixed(3)} bits`);
+
+    // ---- Right panel: white-box internal split ----
+    const right = g.append("g").attr("transform", `translate(${panelW + panelGap},0)`);
+    right.append("rect")
+        .attr("x", 0).attr("y", 0)
+        .attr("width", panelW).attr("height", iH)
+        .attr("fill", "#f8f9fa").attr("stroke", "#dadce0").attr("rx", 6);
+
+    right.append("text")
+        .attr("x", 8).attr("y", 14)
+        .attr("font-size", 10).attr("font-weight", 600)
+        .attr("fill", "#ea4335")
+        .text("WHITE-BOX PATTERN");
+
+    right.append("text")
+        .attr("x", 8).attr("y", 28)
+        .attr("font-size", 10).attr("fill", "#5f6368")
+        .text("Inspect parent and child node entropies");
+
+    const delta = 0.25;
+    const pLeft = Math.max(0.01, Math.min(0.99, selectedP + delta));
+    const pRight = Math.max(0.01, Math.min(0.99, selectedP - delta));
+    const hParent = entropy(selectedP);
+    const hChildren = 0.5 * (entropy(pLeft) + entropy(pRight));
+    const infoGain = hParent - hChildren;
+
+    const wbY = d3.scaleLinear().domain([0, 1]).range([iH - 18, 40]);
+    const xParent = panelW * 0.17;
+    const xChild1 = panelW * 0.45;
+    const xChild2 = panelW * 0.72;
+    const wbW = 30;
+
+    const bars = [
+        { x: xParent, h: hParent, name: "Parent" },
+        { x: xChild1, h: entropy(pLeft), name: "L" },
+        { x: xChild2, h: entropy(pRight), name: "R" },
+    ];
+
+    right.selectAll("rect.entbar")
+        .data(bars)
+        .join("rect")
+        .attr("class", "entbar")
+        .attr("x", (d) => d.x)
+        .attr("y", (d) => wbY(d.h))
+        .attr("width", wbW)
+        .attr("height", (d) => wbY(0) - wbY(d.h))
+        .attr("fill", (d, i) => (i === 0 ? "#ea4335" : "#fbbc04"))
+        .attr("rx", 3);
+
+    right.selectAll("text.entname")
+        .data(bars)
+        .join("text")
+        .attr("class", "entname")
+        .attr("x", (d) => d.x + wbW / 2)
+        .attr("y", iH - 6)
+        .attr("text-anchor", "middle")
+        .attr("font-size", 9)
+        .attr("fill", "#5f6368")
+        .text((d) => d.name);
+
+    right.append("line")
+        .attr("x1", xParent + wbW).attr("x2", xChild1)
+        .attr("y1", wbY(hParent) - 6).attr("y2", wbY(entropy(pLeft)) - 6)
+        .attr("stroke", "#9aa0a6").attr("stroke-width", 1.3);
+    right.append("line")
+        .attr("x1", xParent + wbW).attr("x2", xChild2)
+        .attr("y1", wbY(hParent) - 6).attr("y2", wbY(entropy(pRight)) - 6)
+        .attr("stroke", "#9aa0a6").attr("stroke-width", 1.3);
+
+    right.append("text")
+        .attr("x", 8).attr("y", iH - 24)
+        .attr("font-size", 10).attr("fill", "#202124")
+        .text(`Information gain = ${infoGain.toFixed(3)} bits`);
+}
+
 function drawGradientExample() {
     const svg = d3.select("#gradient-example-svg");
     if (svg.empty()) return;
@@ -1820,6 +1957,7 @@ function drawDescentExample() {
 
 drawLossExample();
 drawEntropyExample();
+drawEntropyPattern();
 drawGradientExample();
 drawDescentExample();
 
@@ -1827,7 +1965,10 @@ if (lossErrorSlider) {
     lossErrorSlider.addEventListener("input", drawLossExample);
 }
 if (entropyPSlider) {
-    entropyPSlider.addEventListener("input", drawEntropyExample);
+    entropyPSlider.addEventListener("input", () => {
+        drawEntropyExample();
+        drawEntropyPattern();
+    });
 }
 if (gradientXSlider) {
     gradientXSlider.addEventListener("input", drawGradientExample);
