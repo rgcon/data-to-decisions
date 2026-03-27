@@ -32,8 +32,8 @@
         <nav class="sidebar" aria-label="Page navigation">
             <div class="sidebar-section-title">Overview</div>
             <a href="#intro">Introduction</a>
-            <a href="#math-connection">Math connection</a>
             <a href="#guided-lesson">Guided lesson</a>
+            <a href="#math-connection">Math connection</a>
             <div class="sidebar-section-title">Modules</div>
             <a href="#distributions">1. Distribution families</a>
             <a href="#sample-space">2. Sample space</a>
@@ -64,7 +64,7 @@
         </header>
 
         <main>
-            <section class="panel intro-grid">
+            <section class="panel intro-grid" id="intro-grid">
                 <article>
                     <h2>What this demonstrates</h2>
                     <p>
@@ -85,6 +85,29 @@
                         number of trials you are considering.
                     </p>
                 </article>
+            </section>
+
+            <section class="panel lesson-flow" id="guided-lesson">
+                <div class="lesson-copy">
+                    <p class="module-kicker">Guided lesson</p>
+                    <h2>Move through the ideas in order</h2>
+                    <p id="lesson-narration">
+                        Start with the type of random variable. That choice determines whether we talk about exact point
+                        probabilities, interval probabilities, or a combination of both.
+                    </p>
+                </div>
+                <div class="lesson-controls">
+                    <div class="lesson-progress-row">
+                        <span class="metric-label" id="lesson-step-label">Step 1 of 5</span>
+                        <div class="lesson-progress-track" aria-hidden="true">
+                            <div class="lesson-progress-fill" id="lesson-progress-fill"></div>
+                        </div>
+                    </div>
+                    <div class="button-row lesson-buttons">
+                        <button id="lesson-prev" class="ghost" type="button">Previous step</button>
+                        <button id="lesson-next" type="button">Next step</button>
+                    </div>
+                </div>
             </section>
 
             <section class="panel concept-bridge" id="math-connection">
@@ -216,29 +239,6 @@
                     </p>
                     <p class="math-block"><span class="inline-math">multiplicative dependence -> inverse log view ->
                             derivative for local change or optimization</span></p>
-                </div>
-            </section>
-
-            <section class="panel lesson-flow" id="guided-lesson">
-                <div class="lesson-copy">
-                    <p class="module-kicker">Guided lesson</p>
-                    <h2>Move through the ideas in order</h2>
-                    <p id="lesson-narration">
-                        Start with the type of random variable. That choice determines whether we talk about exact point
-                        probabilities, interval probabilities, or a combination of both.
-                    </p>
-                </div>
-                <div class="lesson-controls">
-                    <div class="lesson-progress-row">
-                        <span class="metric-label" id="lesson-step-label">Step 1 of 5</span>
-                        <div class="lesson-progress-track" aria-hidden="true">
-                            <div class="lesson-progress-fill" id="lesson-progress-fill"></div>
-                        </div>
-                    </div>
-                    <div class="button-row lesson-buttons">
-                        <button id="lesson-prev" class="ghost" type="button">Previous step</button>
-                        <button id="lesson-next" type="button">Next step</button>
-                    </div>
                 </div>
             </section>
 
