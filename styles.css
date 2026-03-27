@@ -660,6 +660,16 @@ button.ghost:hover {
     }
 }
 
+/* ---- Distribution families section (full-width override) ---- */
+
+.dist-section {
+    grid-template-columns: 1fr !important;
+}
+
+.dist-section .module-copy {
+    max-width: 100%;
+}
+
 /* ---- Distribution type cards ---- */
 
 .dist-type-grid {
@@ -674,7 +684,8 @@ button.ghost:hover {
     border-radius: 8px;
     padding: 16px;
     background: var(--surface);
-    display: grid;
+    display: flex;
+    flex-direction: column;
     gap: 10px;
     border-top-width: 3px;
 }
@@ -707,7 +718,8 @@ button.ghost:hover {
     padding: 10px 12px;
     font-size: 13px;
     color: var(--text-secondary);
-    display: grid;
+    display: flex;
+    flex-direction: column;
     gap: 5px;
 }
 
@@ -736,8 +748,9 @@ button.ghost:hover {
 .dist-facts {
     margin: 0;
     padding-left: 18px;
-    display: grid;
-    gap: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
 }
 
 .dist-facts li {
@@ -746,8 +759,21 @@ button.ghost:hover {
     line-height: 1.5;
 }
 
+/* Distribution interactive row */
+.dist-interactive {
+    display: grid;
+    grid-template-columns: minmax(280px, 380px) minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+    margin-top: 20px;
+}
+
 @media (max-width: 960px) {
     .dist-type-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dist-interactive {
         grid-template-columns: 1fr;
     }
 }

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Probability Theory with D3</title>
+    <title>Foundations of Data Science, Machine Learning and Statistical Learning</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -16,15 +16,7 @@
 <body>
 
     <header class="site-header">
-        <a href="#" class="site-header-logo">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-            </svg>
-        </a>
-        <span class="site-header-product">Probability Theory <span>with D3</span></span>
+        <span class="site-header-product">Foundations of <span>Data Science, ML & Statistical Learning</span></span>
     </header>
 
     <div class="site-body">
@@ -45,7 +37,7 @@
         <div class="page-shell">
         <header class="hero" id="intro">
             <p class="eyebrow">Interactive D3 explainer</p>
-            <h1>Probability theory becomes clearer when you can move the assumptions.</h1>
+            <h1>Foundations of Data Science, Machine Learning and Statistical Learning</h1>
             <p class="hero-copy">
                 This page uses D3.js to show four core ideas: how event probability comes from a sample space,
                 how repeated trials create a distribution, how discrete, continuous, and mixed random variables differ,
@@ -242,7 +234,7 @@
                 </div>
             </section>
 
-            <section class="panel module module-step" data-step="0" id="distributions">
+            <section class="panel module module-step dist-section" data-step="0" id="distributions">
                 <div class="module-copy">
                     <p class="module-kicker">1. Distribution families</p>
                     <h2>Discrete, continuous, and mixed variables</h2>
@@ -344,41 +336,45 @@
                         </div>
                     </div>
 
-                    <div class="controls-row" style="margin-top:20px;">
-                        <label for="distribution-type">Choose a distribution family to explore interactively</label>
-                        <select id="distribution-type">
-                            <option value="discrete">Discrete distribution</option>
-                            <option value="continuous">Continuous distribution</option>
-                            <option value="mixed">Mixed distribution</option>
-                        </select>
+                    <div class="dist-interactive">
+                        <div class="module-copy">
+                            <div class="controls-row">
+                                <label for="distribution-type">Choose a distribution family to explore interactively</label>
+                                <select id="distribution-type">
+                                    <option value="discrete">Discrete distribution</option>
+                                    <option value="continuous">Continuous distribution</option>
+                                    <option value="mixed">Mixed distribution</option>
+                                </select>
+                            </div>
+                            <div class="stacked-controls" id="distribution-parameters">
+                                <div class="parameter-group" data-family="discrete">
+                                    <label for="poisson-rate">Poisson rate λ: <strong
+                                            id="poisson-rate-value">3.0</strong></label>
+                                    <input id="poisson-rate" type="range" min="0.5" max="8" step="0.5" value="3" />
+                                </div>
+                                <div class="parameter-group" data-family="continuous" hidden>
+                                    <label for="normal-mean">Normal mean μ: <strong id="normal-mean-value">5.0</strong></label>
+                                    <input id="normal-mean" type="range" min="1" max="9" step="0.5" value="5" />
+                                    <label for="normal-std">Normal standard deviation σ: <strong
+                                            id="normal-std-value">1.4</strong></label>
+                                    <input id="normal-std" type="range" min="0.5" max="3" step="0.1" value="1.4" />
+                                </div>
+                                <div class="parameter-group" data-family="mixed" hidden>
+                                    <label for="zero-mass">Zero-inflation mass π: <strong
+                                            id="zero-mass-value">0.35</strong></label>
+                                    <input id="zero-mass" type="range" min="0.05" max="0.75" step="0.05" value="0.35" />
+                                    <label for="positive-mean">Positive-part mean: <strong
+                                            id="positive-mean-value">4.0</strong></label>
+                                    <input id="positive-mean" type="range" min="1" max="8" step="0.5" value="4" />
+                                </div>
+                            </div>
+                            <div class="formula-card" id="distribution-summary"></div>
+                            <div class="comparison-grid" id="learning-comparison"></div>
+                        </div>
+                        <div class="viz-card wide">
+                            <svg id="distribution-svg" aria-label="Distribution type comparison"></svg>
+                        </div>
                     </div>
-                    <div class="stacked-controls" id="distribution-parameters">
-                        <div class="parameter-group" data-family="discrete">
-                            <label for="poisson-rate">Poisson rate λ: <strong
-                                    id="poisson-rate-value">3.0</strong></label>
-                            <input id="poisson-rate" type="range" min="0.5" max="8" step="0.5" value="3" />
-                        </div>
-                        <div class="parameter-group" data-family="continuous" hidden>
-                            <label for="normal-mean">Normal mean μ: <strong id="normal-mean-value">5.0</strong></label>
-                            <input id="normal-mean" type="range" min="1" max="9" step="0.5" value="5" />
-                            <label for="normal-std">Normal standard deviation σ: <strong
-                                    id="normal-std-value">1.4</strong></label>
-                            <input id="normal-std" type="range" min="0.5" max="3" step="0.1" value="1.4" />
-                        </div>
-                        <div class="parameter-group" data-family="mixed" hidden>
-                            <label for="zero-mass">Zero-inflation mass π: <strong
-                                    id="zero-mass-value">0.35</strong></label>
-                            <input id="zero-mass" type="range" min="0.05" max="0.75" step="0.05" value="0.35" />
-                            <label for="positive-mean">Positive-part mean: <strong
-                                    id="positive-mean-value">4.0</strong></label>
-                            <input id="positive-mean" type="range" min="1" max="8" step="0.5" value="4" />
-                        </div>
-                    </div>
-                    <div class="formula-card" id="distribution-summary"></div>
-                    <div class="comparison-grid" id="learning-comparison"></div>
-                </div>
-                <div class="viz-card wide">
-                    <svg id="distribution-svg" aria-label="Distribution type comparison"></svg>
                 </div>
             </section>
 
