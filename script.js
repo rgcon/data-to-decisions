@@ -192,6 +192,14 @@ const distributionTypeSelect = document.querySelector("#distribution-type");
 const distributionSummary = document.querySelector("#distribution-summary");
 const learningComparison = document.querySelector("#learning-comparison");
 const parameterGroups = Array.from(document.querySelectorAll(".parameter-group"));
+const lossErrorSlider = document.querySelector("#loss-error-slider");
+const lossErrorValue = document.querySelector("#loss-error-value");
+const entropyPSlider = document.querySelector("#entropy-p-slider");
+const entropyPValue = document.querySelector("#entropy-p-value");
+const gradientXSlider = document.querySelector("#gradient-x-slider");
+const gradientXValue = document.querySelector("#gradient-x-value");
+const descentLRSlider = document.querySelector("#descent-lr-slider");
+const descentLRValue = document.querySelector("#descent-lr-value");
 const functionTypeSelect = document.querySelector("#function-type");
 const verticalLineInput = document.querySelector("#vertical-line-x");
 const verticalLineXValue = document.querySelector("#vertical-line-x-value");
@@ -1367,6 +1375,21 @@ function updateLessonFlow(shouldScroll = false) {
     }
 }
 
+function syncLessonStepWithHash() {
+    const hash = window.location.hash;
+    if (!hash) {
+        return;
+    }
+
+    const targetId = hash.startsWith("#") ? hash.slice(1) : hash;
+    const targetIndex = lessonSections.findIndex((section) => section.id === targetId);
+
+    if (targetIndex >= 0) {
+        currentLessonStep = targetIndex;
+        updateLessonFlow(false);
+    }
+}
+
 distributionTypeSelect.addEventListener("change", updateDistributionComparison);
 dieEventSelect.addEventListener("change", updateDieVisualization);
 
@@ -1396,6 +1419,8 @@ lessonNextButton.addEventListener("click", () => {
     updateLessonFlow(true);
 });
 
+window.addEventListener("hashchange", syncLessonStepWithHash);
+
 addTrialButtons.forEach((button) => {
     button.addEventListener("click", () => {
         addTrials(Number(button.dataset.addTrials));
@@ -1411,6 +1436,7 @@ updateBinomialChart();
 updateLearningComparison();
 updateSimulationChart();
 updateLessonFlow();
+syncLessonStepWithHash();
 
 // ---- Static example charts inside distribution type cards ----
 
@@ -1616,17 +1642,35 @@ function drawLossExample() {
     const iW = W - m.left - m.right;
     const iH = H - m.top - m.bottom;
 
+    const selectedError = Number(lossErrorSlider ? lossErrorSlider.value : 1.5);
+    if (lossErrorValue) {
+        lossErrorValue.textContent = selectedError.toFixed(1);
+    }
+
     const x = d3.scaleLinear().domain([-3, 3]).range([0, iW]);
     const y = d3.scaleLinear().domain([0, 9.5]).range([iH, 0]);
     const data = d3.range(-3, 3.01, 0.05).map((e) => ({ e, l: e * e }));
     const line = d3.line().x((d) => x(d.e)).y((d) => y(d.l)).curve(d3.curveMonotoneX);
 
     svg.attr("viewBox", `0 0 ${W} ${H}`);
+    svg.selectAll("*").remove();
     const g = svg.append("g").attr("transform", `translate(${m.left},${m.top})`);
 
     g.append("path").datum(data).attr("fill", "none").attr("stroke", "#1a73e8").attr("stroke-width", 2.5).attr("d", line);
     g.append("circle").attr("cx", x(0)).attr("cy", y(0)).attr("r", 5).attr("fill", "#34a853");
     g.append("text").attr("x", x(0) + 8).attr("y", y(0) - 6).attr("font-size", 9).attr("fill", "#137333").text("minimum");
+
+    g.append("line")
+        .attr("x1", x(selectedError)).attr("x2", x(selectedError))
+        .attr("y1", iH).attr("y2", y(selectedError * selectedError))
+        .attr("stroke", "#ea4335").attr("stroke-dasharray", "4,3");
+    g.append("circle")
+        .attr("cx", x(selectedError)).attr("cy", y(selectedError * selectedError))
+        .attr("r", 4.5).attr("fill", "#ea4335");
+    g.append("text")
+        .attr("x", x(selectedError) + 6).attr("y", y(selectedError * selectedError) - 6)
+        .attr("font-size", 9).attr("fill", "#c5221f")
+        .text(`L=${(selectedError * selectedError).toFixed(2)}`);
 
     g.append("g").attr("class", "axis").attr("transform", `translate(0,${iH})`).call(d3.axisBottom(x).ticks(5));
     g.append("g").attr("class", "axis").call(d3.axisLeft(y).ticks(4));
@@ -1641,6 +1685,11 @@ function drawEntropyExample() {
     const iW = W - m.left - m.right;
     const iH = H - m.top - m.bottom;
 
+    const selectedP = Number(entropyPSlider ? entropyPSlider.value : 0.5);
+    if (entropyPValue) {
+        entropyPValue.textContent = selectedP.toFixed(2);
+    }
+
     const safeLog2 = (v) => (v <= 0 ? 0 : Math.log2(v));
     const entropy = (p) => -(p * safeLog2(p) + (1 - p) * safeLog2(1 - p));
     const data = d3.range(0.001, 1, 0.005).map((p) => ({ p, h: entropy(p) }));
@@ -1650,11 +1699,20 @@ function drawEntropyExample() {
     const line = d3.line().x((d) => x(d.p)).y((d) => y(d.h)).curve(d3.curveMonotoneX);
 
     svg.attr("viewBox", `0 0 ${W} ${H}`);
+    svg.selectAll("*").remove();
     const g = svg.append("g").attr("transform", `translate(${m.left},${m.top})`);
 
     g.append("path").datum(data).attr("fill", "none").attr("stroke", "#34a853").attr("stroke-width", 2.5).attr("d", line);
     g.append("circle").attr("cx", x(0.5)).attr("cy", y(1)).attr("r", 5).attr("fill", "#fbbc04");
     g.append("text").attr("x", x(0.5) + 8).attr("y", y(1) - 6).attr("font-size", 9).attr("fill", "#b06700").text("max at p=0.5");
+
+    g.append("line")
+        .attr("x1", x(selectedP)).attr("x2", x(selectedP))
+        .attr("y1", iH).attr("y2", y(entropy(selectedP)))
+        .attr("stroke", "#ea4335").attr("stroke-dasharray", "4,3");
+    g.append("circle")
+        .attr("cx", x(selectedP)).attr("cy", y(entropy(selectedP)))
+        .attr("r", 4.5).attr("fill", "#ea4335");
 
     g.append("g").attr("class", "axis").attr("transform", `translate(0,${iH})`).call(d3.axisBottom(x).ticks(5));
     g.append("g").attr("class", "axis").call(d3.axisLeft(y).ticks(4));
@@ -1669,13 +1727,18 @@ function drawGradientExample() {
     const iW = W - m.left - m.right;
     const iH = H - m.top - m.bottom;
 
+    const selectedX = Number(gradientXSlider ? gradientXSlider.value : 1.4);
+    if (gradientXValue) {
+        gradientXValue.textContent = selectedX.toFixed(1);
+    }
+
     const x = d3.scaleLinear().domain([-2.5, 2.5]).range([0, iW]);
     const y = d3.scaleLinear().domain([0, 7]).range([iH, 0]);
     const f = (v) => v * v;
     const data = d3.range(-2.5, 2.51, 0.05).map((v) => ({ v, f: f(v) }));
     const line = d3.line().x((d) => x(d.v)).y((d) => y(d.f)).curve(d3.curveMonotoneX);
 
-    const x0 = 1.4;
+    const x0 = selectedX;
     const y0 = f(x0);
     const slope = 2 * x0;
     const tx1 = x0 - 0.8;
@@ -1684,6 +1747,7 @@ function drawGradientExample() {
     const ty2 = y0 + slope * (tx2 - x0);
 
     svg.attr("viewBox", `0 0 ${W} ${H}`);
+    svg.selectAll("*").remove();
     const g = svg.append("g").attr("transform", `translate(${m.left},${m.top})`);
 
     g.append("path").datum(data).attr("fill", "none").attr("stroke", "#1a73e8").attr("stroke-width", 2.5).attr("d", line);
@@ -1705,6 +1769,11 @@ function drawDescentExample() {
     const iW = W - m.left - m.right;
     const iH = H - m.top - m.bottom;
 
+    const eta = Number(descentLRSlider ? descentLRSlider.value : 0.25);
+    if (descentLRValue) {
+        descentLRValue.textContent = eta.toFixed(2);
+    }
+
     const x = d3.scaleLinear().domain([-2.5, 2.5]).range([0, iW]);
     const y = d3.scaleLinear().domain([0, 7]).range([iH, 0]);
     const f = (v) => v * v;
@@ -1712,7 +1781,6 @@ function drawDescentExample() {
     const line = d3.line().x((d) => x(d.v)).y((d) => y(d.f)).curve(d3.curveMonotoneX);
 
     // 1D gradient descent path
-    const eta = 0.25;
     let theta = 2.0;
     const steps = [{ theta, loss: f(theta) }];
     for (let i = 0; i < 6; i += 1) {
@@ -1721,6 +1789,7 @@ function drawDescentExample() {
     }
 
     svg.attr("viewBox", `0 0 ${W} ${H}`);
+    svg.selectAll("*").remove();
     const g = svg.append("g").attr("transform", `translate(${m.left},${m.top})`);
 
     g.append("path").datum(data).attr("fill", "none").attr("stroke", "#5f6368").attr("stroke-width", 2).attr("d", line);
@@ -1753,6 +1822,19 @@ drawLossExample();
 drawEntropyExample();
 drawGradientExample();
 drawDescentExample();
+
+if (lossErrorSlider) {
+    lossErrorSlider.addEventListener("input", drawLossExample);
+}
+if (entropyPSlider) {
+    entropyPSlider.addEventListener("input", drawEntropyExample);
+}
+if (gradientXSlider) {
+    gradientXSlider.addEventListener("input", drawGradientExample);
+}
+if (descentLRSlider) {
+    descentLRSlider.addEventListener("input", drawDescentExample);
+}
 
 // ---- 6. Functions and Non-functions ----
 
